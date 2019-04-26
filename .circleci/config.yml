@@ -16,17 +16,18 @@ jobs:
       - run: go test -run=XXX -bench=. $(go list ./crypto)
       - run: make minicluster
                             
-  build_test_docker:
+  build:
     docker:
       - image: iotex/iotex-core-ci:latest
     working_directory: /go/src/github.com/iotexproject/iotex-core
     steps:
       - checkout
       - run: golint -set_exit_status $(go list ./... | grep -v /vendor/ | grep -v /explorer/idl/ | grep -v /api/idl/)
-      - run: ./go.test.sh
-      - run: bash <(curl -s https://codecov.io/bash)
-      - run: go test -run=XXX -bench=. $(go list ./crypto)
-      - run: make minicluster
+#       - run: ./go.test.sh
+      - run: go test -v $(go list ./... |grep -v vendor | circleci tests split)
+#       - run: bash <(curl -s https://codecov.io/bash)
+#       - run: go test -run=XXX -bench=. $(go list ./crypto)
+#       - run: make minicluster
 
   build_test_darwin:
     macos:
@@ -156,17 +157,6 @@ workflows:
     jobs:
       #- build_test_ubuntu
 #       - build_test_darwin
-      - build_test_docker
+      - build
 
-  scheduled-workflow:
-    triggers:
-      - schedule:
-          cron: "0 7 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - nightly_build_docker
-      - nightly_bin_build_docker
-#       - nightly_bin_build_darwin
+
